@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fireworks Animation</title>
+  <style>
+    body {
+      margin: 0;
+      background: linear-gradient(135deg, #2a2a3e, #203958, #2c5d8a);
+      overflow: hidden;
+      font-family: 'Georgia', serif;
+      width: 100vw;
+    }
+
+    #fireworksContainer {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 0;
+    }
+
+    canvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: transparent;
+    }
+
+    #messageContainer {
+      display: none;
+      flex-direction: column;
+      justify-content: flex-start;
+      align-items: center;
+      max-width: 150%; /* Wider width for the message */
+      max-height: 60%;
+      padding: 30px;
+      background: #fff;
+      color: #333;
+      z-index: 1;
+      position: fixed;
+      top: 60%; /* Lower position */
+      left: 50%;
+      transform: translate(-50%, -50%);
+      text-align: justify;
+      border-radius: 10px;
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5);
+      font-family: 'Merriweather', serif;
+      font-size: 18px;
+      line-height: 1.8;
+      letter-spacing: 0.5px;
+      overflow-y: auto;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+      opacity: 0;
+      transition: opacity 1s ease-out, transform 1s ease-out;
+    }
+
+    #messageContainer h1 {
+      margin-bottom: 20px;
+      font-size: 20px;
+      font-weight: 400;
+      line-height: 1.6;
+    }
+
+    .close-btn {
+      background-color: #ff4e8e;
+      border: none;
+      color: white;
+      padding: 10px 25px;
+      font-size: 16px;
+      cursor: pointer;
+      margin-top: 20px;
+      border-radius: 5px;
+      transition: background-color 0.3s;
+    }
+
+    .close-btn:hover {
+      background-color: #ff1a5d;
+    }
+  </style>
+</head>
+<body>
+  <div id="fireworksContainer">
+    <canvas id="fireworksCanvas"></canvas>
+  </div>
+  <div id="messageContainer">
+    <h1>
+      As the year comes to a close and a new one begins, I find myself filled with so much gratitude and appreciation for you. 
+      2024 has been a year of growth and change, but one thing that has remained constant is your presence in my life. 
+      You’ve brought warmth, laughter, and light into my world in ways I could never have imagined, and I’m beyond thankful for that. 
+      I look at everything we’ve shared, and my heart feels full because of you. This new year gives me a chance to reflect on all that you’ve done for me — 
+      your kindness, your understanding, your unwavering support. You’ve been there in ways I never expected, making the highs even higher and the lows more bearable. 
+      You’ve shown me what it means to love and be loved, and for that, I’ll forever be grateful. Every moment with you is a gift, 
+      and I want you to know how much you mean to me.
+    </h1>
+    <button class="close-btn" id="closeBtn">Close</button>
+  </div>
+
+  <script>
+    const canvas = document.getElementById('fireworksCanvas');
+    const ctx = canvas.getContext('2d');
+    let fireworks = [];
+    let particles = [];
+
+    function resizeCanvas() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+
+    function random(min, max) {
+      return Math.random() * (max - min) + min;
+    }
+
+    function Firework() {
+      this.x = canvas.width / 2;
+      this.y = canvas.height;
+      this.targetX = random(0, canvas.width);
+      this.targetY = random(0, canvas.height / 2);
+      this.speed = 5;
+      this.angle = Math.atan2(this.targetY - this.y, this.targetX - this.x);
+      this.size = 3;
+    }
+
+    Firework.prototype.update = function () {
+      const velocityX = Math.cos(this.angle) * this.speed;
+      const velocityY = Math.sin(this.angle) * this.speed;
+      this.x += velocityX;
+      this.y += velocityY;
+
+      if (Math.hypot(this.targetX - this.x, this.targetY - this.y) < this.speed) {
+        createParticles(this.targetX, this.targetY);
+        return false;
+      }
+      return true;
+    };
+
+    Firework.prototype.draw = function () {
+      ctx.beginPath();
+      ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+      ctx.fillStyle = 'pink';
+      ctx.fill();
+    };
+
+    function Particle(x, y) {
+      this.x = x;
+      this.y = y;
+      this.size = random(2, 4);
+      this.speed = random(2, 5);
+      this.angle = random(0, Math.PI * 2);
+      this.alpha = 1;
+      this.decay = random(0.01, 0.03);
+      this.color = `hsl(${random(330, 360)}, 100%, 80%)`;
+    }
+
+    Particle.prototype.update = function () {
+      this.x += Math.cos(this.angle) * this.speed;
+      this.y += Math.sin(this.angle) * this.speed;
+      this.alpha -= this.decay;
+
+      return this.alpha > 0;
+    };
+
+    Particle.prototype.draw = function () {
+      ctx.save();
+      ctx.globalAlpha = this.alpha;
+      ctx.beginPath();
+      ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+      ctx.fillStyle = this.color;
+      ctx.fill();
+      ctx.restore();
+    };
+
+    function createParticles(x, y) {
+      for (let i = 0; i < 100; i++) {
+        particles.push(new Particle(x, y));
+      }
+    }
+
+    function animate() {
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.1)';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      fireworks = fireworks.filter((firework) => firework.update());
+      fireworks.forEach((firework) => firework.draw());
+
+      particles = particles.filter((particle) => particle.update());
+      particles.forEach((particle) => particle.draw());
+
+      if (fireworks.length < 10 && Math.random() < 0.05) {
+        fireworks.push(new Firework());
+      }
+
+      requestAnimationFrame(animate);
+    }
+    animate();
+
+    setTimeout(() => {
+      const messageContainer = document.getElementById('messageContainer');
+      messageContainer.style.display = 'flex';
+      setTimeout(() => {
+        messageContainer.style.opacity = 1;
+      }, 50);
+    }, random(15000, 20000));
+
+    document.getElementById('closeBtn').addEventListener('click', () => {
+      document.getElementById('messageContainer').style.display = 'none';
+    });
+  </script>
+</body>
+</html>
